@@ -1,1 +1,69 @@
-pub async fn create_user() {}
+use argon2::{
+    Argon2,
+    password_hash::{PasswordHash, PasswordHasher, SaltString, rand_core::OsRng},
+};
+use axum::{Json, extract::State, http::StatusCode};
+use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
+use serde::{Deserialize, Serialize};
+
+use crate::{database::users, utils::api_error::ApiError};
+
+#[derive(Deserialize)]
+pub struct RequestUser {
+    username: String,
+    password: String,
+}
+
+#[derive(Serialize)]
+pub struct ResponseUser {
+    id: i32,
+    username: String,
+    token: String,
+}
+
+fn argon_hash(password: String) -> Result<String, ApiError> {
+    let pw_bytes = password.as_bytes();
+    let salt = SaltString::generate(&mut OsRng);
+
+    let argon2 = Argon2::default();
+
+    let hash = argon2
+        .hash_password(pw_bytes, &salt)
+        .map_err(|_| ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "Hash error"));
+
+    Ok(hash.unwrap().to_string())
+}
+
+// TODO: impl hash verification
+fn argon_verify() {}
+
+pub async fn create_user(
+    State(db_conn): State<DatabaseConnection>,
+    // Extension(db_conn): Extension<DatabaseConnection>,
+    Json(req_user): Json<RequestUser>,
+) -> Result<Json<ResponseUser>, ApiError> {
+    let new_user = users::ActiveModel {
+        username: Set(req_user.username),
+        password: Set(argon_hash(req_user.password)?), // TODO: impl hashing
+        token: Set(Some("jwt".to_owned())),            // TODO: impl jwt
+        ..Default::default()
+    }
+    .save(&db_conn)
+    .await
+    .map_err(|_err| {
+        ApiError::new(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Unable to save new user at this time, please try again later",
+        )
+    })?;
+
+    Ok(Json(ResponseUser {
+        id: new_user.id.unwrap(),
+        username: new_user.username.unwrap(),
+        token: new_user.token.unwrap().unwrap(),
+    }))
+}
+
+pub async fn login() {}
+
+pub async fn logout() {}
