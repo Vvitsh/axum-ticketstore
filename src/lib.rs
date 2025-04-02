@@ -1,3 +1,4 @@
+mod database;
 mod middleware;
 mod routes;
 mod utils;

@@ -5,7 +5,7 @@ use dotenvy_macro::dotenv;
 #[tokio::main]
 async fn main() {
     dotenv().ok();
-    let db_uri = dotenv!("DATABASE_URI");
+    let db_uri = dotenv!("DATABASE_URL");
 
     run(db_uri).await
 }
