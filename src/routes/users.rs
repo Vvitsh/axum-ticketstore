@@ -2,7 +2,7 @@ use argon2::{
     Argon2, PasswordVerifier,
     password_hash::{PasswordHash, PasswordHasher, SaltString, rand_core::OsRng},
 };
-use axum::{Json, extract::State, http::StatusCode};
+use axum::{Extension, Json, extract::State, http::StatusCode};
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter,
     Set,
@@ -10,8 +10,7 @@ use sea_orm::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    database::users,
-    database::users::Entity as Users,
+    database::users::{self, Entity as Users, Model},
     utils::{api_error::ApiError, jwt::create_jwt},
 };
 
@@ -92,14 +91,14 @@ pub async fn login(
         .await
         .map_err(|_err| ApiError::new(StatusCode::UNAUTHORIZED, "Invalid username"))?;
 
-    if let Some(model) = db_search {
-        if !argon_verify(req_user.password, &model.password)? {
+    if let Some(user_model) = db_search {
+        if !argon_verify(req_user.password, &user_model.password)? {
             return Err(ApiError::new(StatusCode::UNAUTHORIZED, "Invalid password"));
         }
 
         let token = create_jwt()?;
 
-        let mut user = model.into_active_model();
+        let mut user = user_model.into_active_model();
 
         user.token = Set(Some(token));
 
@@ -121,4 +120,17 @@ pub async fn login(
     }
 }
 
-pub async fn logout() {}
+pub async fn logout(
+    State(db_conn): State<DatabaseConnection>,
+    Extension(user_model): Extension<Model>,
+) -> Result<(), ApiError> {
+    let mut user = user_model.into_active_model();
+
+    user.token = Set(None);
+
+    user.save(&db_conn)
+        .await
+        .map_err(|_err| ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "Internal error"))?;
+
+    Ok(())
+}
