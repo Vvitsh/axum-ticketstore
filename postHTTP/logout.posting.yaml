@@ -1,0 +1,7 @@
+name: logout
+method: POST
+url: http://localhost:3000/logout
+auth:
+  type: bearer_token
+  bearer_token:
+    token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3NDM3Mjk2NzMsImV4cCI6MTc0MzczNjg3M30.YYkQBbtdNRwRKIBt3PkvODOWOGomD9ZeSj053-j5ZBw

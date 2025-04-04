@@ -1,5 +1,6 @@
 use axum::{
     body::Body,
+    extract::State,
     http::{Request, StatusCode},
     middleware::Next,
     response::Response,
@@ -10,7 +11,11 @@ use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 use crate::{database::users, utils::api_error::ApiError};
 use crate::{database::users::Entity as Users, utils::jwt::is_valid};
 
-pub async fn guard(mut request: Request<Body>, next: Next) -> Result<Response, ApiError> {
+pub async fn guard(
+    State(db_conn): State<DatabaseConnection>,
+    mut request: Request<Body>,
+    next: Next,
+) -> Result<Response, ApiError> {
     // dbg!(request
     //     .headers()
     //     .typed_get::<Authorization<Bearer>>()
@@ -24,18 +29,28 @@ pub async fn guard(mut request: Request<Body>, next: Next) -> Result<Response, A
         .token()
         .to_owned();
 
-    // Connect to db
-    let db = request
-        .extensions()
-        .get::<DatabaseConnection>()
-        .ok_or_else(|| ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "Internal error"))?;
+    // NOTE: Using state db connect now
+    // let _db = request
+    //     .extensions()
+    //     .get::<DatabaseConnection>()
+    //     .ok_or_else(|| {
+    //         ApiError::new(
+    //             StatusCode::INTERNAL_SERVER_ERROR,
+    //             "Database connection error",
+    //         )
+    //     })?;
 
     // Find the associated user based on their token
     let user = Users::find()
         .filter(users::Column::Token.eq(Some(req_token.clone())))
-        .one(db)
+        .one(&db_conn)
         .await
-        .map_err(|_err| ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "Internal error"))?;
+        .map_err(|_err| {
+            ApiError::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "No user associated with bearer token",
+            )
+        })?;
 
     let Some(user_model) = user else {
         return Err(ApiError::new(

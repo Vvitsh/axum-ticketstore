@@ -3,8 +3,8 @@ use serde::Serialize;
 
 #[derive(Debug)]
 pub struct ApiError {
-    code: StatusCode,
-    message: String,
+    pub code: StatusCode,
+    pub message: String,
 }
 
 #[derive(Serialize)]

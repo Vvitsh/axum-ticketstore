@@ -18,7 +18,7 @@ use crate::middleware::guard::guard;
 
 #[derive(Clone, FromRef)]
 pub struct AppState {
-    db_conn: DatabaseConnection,
+    pub db_conn: DatabaseConnection,
 }
 
 pub fn routes(db_conn: DatabaseConnection) -> Router {
@@ -38,7 +38,7 @@ pub fn routes(db_conn: DatabaseConnection) -> Router {
         .route("/logout", post(logout))
         .route_layer(middleware::from_fn_with_state(app_state.clone(), guard))
         .route("/health_check", get(health_check))
-        .route("/create_account", post(create_user))
+        .route("/create_user", post(create_user))
         .route("/login", post(login))
         .with_state(app_state)
         .layer(cors)
