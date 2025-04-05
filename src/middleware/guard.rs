@@ -16,11 +16,6 @@ pub async fn guard(
     mut request: Request<Body>,
     next: Next,
 ) -> Result<Response, ApiError> {
-    // dbg!(request
-    //     .headers()
-    //     .typed_get::<Authorization<Bearer>>()
-    //     .unwrap());
-
     // Get the bearer token from the request headers
     let req_token = request
         .headers()
@@ -28,17 +23,6 @@ pub async fn guard(
         .ok_or_else(|| ApiError::new(StatusCode::BAD_REQUEST, "Missing bearer token"))?
         .token()
         .to_owned();
-
-    // NOTE: Using state db connect now
-    // let _db = request
-    //     .extensions()
-    //     .get::<DatabaseConnection>()
-    //     .ok_or_else(|| {
-    //         ApiError::new(
-    //             StatusCode::INTERNAL_SERVER_ERROR,
-    //             "Database connection error",
-    //         )
-    //     })?;
 
     // Find the associated user based on their token
     let user = Users::find()

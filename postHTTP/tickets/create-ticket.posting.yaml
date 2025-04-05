@@ -1,0 +1,18 @@
+name: create ticket
+method: POST
+url: http://localhost:3000/tickets
+body:
+  content: |-
+    {
+      "title": "Another test ticket",
+      "description": "I'm still in testing(danger)",
+      "priority": "C"
+    }
+  content_type: application/json
+auth:
+  type: bearer_token
+  bearer_token:
+    token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3NDM4MDEwODMsImV4cCI6MTc0MzgwODI4M30.GA1U1MVr9HAiTYpB1qKdHl_a5rydwUaai7sRozkJp_o
+headers:
+- name: content-type
+  value: application/json
