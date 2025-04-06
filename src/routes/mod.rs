@@ -1,12 +1,14 @@
 mod health_check;
-mod ticket_create;
+mod ticket;
 mod ticket_get;
-mod users;
+mod user;
+mod user_auth;
 
 use health_check::health_check;
-use ticket_create::ticket_create;
+use ticket::ticket_create;
 use ticket_get::{ticket_get_all, ticket_get_single};
-use users::{create_user, login, logout};
+use user::create_user;
+use user_auth::{login, logout};
 
 use axum::{
     Router,
