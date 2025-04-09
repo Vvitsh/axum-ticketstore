@@ -2,6 +2,7 @@ mod health_check;
 mod ticket;
 mod ticket_get;
 mod ticket_update_atomic;
+mod ticket_update_partial;
 mod user;
 mod user_auth;
 
@@ -9,6 +10,7 @@ use health_check::health_check;
 use ticket::ticket_create;
 use ticket_get::{ticket_get_all, ticket_get_single};
 use ticket_update_atomic::ticket_update_atomic;
+use ticket_update_partial::ticket_update_partial;
 use user::create_user;
 use user_auth::{login, logout};
 
@@ -17,7 +19,7 @@ use axum::{
     extract::FromRef,
     http::Method,
     middleware,
-    routing::{get, post, put},
+    routing::{get, patch, post, put},
 };
 use sea_orm::DatabaseConnection;
 use tower_http::cors::{Any, CorsLayer};
@@ -61,6 +63,7 @@ pub fn routes(db_conn: DatabaseConnection) -> Router {
         .route("/tickets", get(ticket_get_all))
         .route("/tickets/{id}", get(ticket_get_single))
         .route("/tickets/{id}", put(ticket_update_atomic))
+        .route("/tickets/{id}", patch(ticket_update_partial))
         // Health check routes
         .route("/health_check", get(health_check))
         .with_state(app_state)

@@ -49,8 +49,9 @@ pub async fn ticket_update_atomic(
         .await
         .map_err(|err| {
             tracing::error!("Error: {:?}", err);
-            ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "Failed to fetch ticket")
+            ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "Failed to update ticket")
         })?;
 
+    tracing::info!("Ticket updated");
     Ok(())
 }
